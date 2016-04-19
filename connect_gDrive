@@ -1,0 +1,10 @@
+__author__ = 'RainDrops'
+
+import gdata.docs.service
+import ga_auth_cc
+
+service = ga_auth_cc.initialize_service()
+request = {"function": "getFoldersUnderRoot"}
+SCRIPT_ID = 'MBauxD-983NJvhwnYm5G4CFidCN310hQ6'
+
+response = service.scripts().run(body=request, scriptId=SCRIPT_ID).execute()
