@@ -1,0 +1,31 @@
+from __future__ import print_function
+from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.file import Storage
+from httplib2 import Http
+from apiclient.discovery import build
+from apiclient import errors
+
+SCOPES = ['https://www.googleapis.com/auth/drive']
+CLIENT_EMAIL = 'areaten@areaten-1278.iam.gserviceaccount.com'
+TOKEN_FILE_NAME = 'analytics.dat'
+PEM_FILE_NAME = 'aTen.pem'
+
+def prepare_credentials():
+
+	storage = Storage(TOKEN_FILE_NAME)
+	credentials = storage.get()
+
+	if credentials is None or credentials.invalid:
+		with open(PEM_FILE_NAME) as f:
+			#private_key = f.read()
+			credentials = ServiceAccountCredentials.from_p12_keyfile(CLIENT_EMAIL, 'AreaTen-d9b89b294a8d.p12', ' '.join(SCOPES))
+			storage.put(credentials) #store access token
+
+	return credentials
+
+def initialize_service():
+
+	credentials = prepare_credentials()
+	http_auth = credentials.authorize(Http())
+
+	return build('script', 'v1', http=http_auth)
