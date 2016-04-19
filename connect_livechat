@@ -7,8 +7,7 @@ import urllib
 import json
 import operator
 
-u='info@areaten.com'
-p='4ef3d53c3f49fcdd4d359a82c50a8271'
+
 tags = ['Lead', 'Enquiry outside of AU']
 chatPerTag = {}
 #GROUP
