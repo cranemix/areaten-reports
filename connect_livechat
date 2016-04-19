@@ -1,0 +1,117 @@
+import operator
+
+__author__ = 'RainDrops'
+
+import urllib2
+import urllib
+import json
+import operator
+
+u='info@areaten.com'
+p='4ef3d53c3f49fcdd4d359a82c50a8271'
+tags = ['Lead', 'Enquiry outside of AU']
+chatPerTag = {}
+#GROUP
+#url='https://api.livechatinc.com/groups/8'
+
+def main():
+	#daily chat data
+	url='https://api.livechatinc.com/reports/chats/total_chats?date_from=2016-02-01&date_to=2016-02-29&group_by=day&group=8'
+	daily_chat = parseChatReport(requestAPI(url))
+
+	#hourly chat data
+	#url='https://api.livechatinc.com/reports/chats/total_chats?date_from=2016-02-01&date_to=2016-02-29&group_by=hour&group=8'
+	#hourly_chat = parseChatReport(requestAPI(url))
+
+	#get the chats per tag report
+	#url='https://api.livechatinc.com/tags?group=8'
+	#parseTags(requestAPI(url))
+
+	#get the monthly chat prompts per client
+	#url='https://api.livechatinc.com/reports/chats/greetings?date_from=2016-02-01&date_to=2016-02-29&group_by=month&group=8'
+	#monthly_chat_prompt = parseChatGreetings(requestAPI(url))
+
+	#get the monthly chat engagements per client
+	#url='https://api.livechatinc.com/reports/chats/total_chats?date_from=2016-02-01&date_to=2016-02-29&group_by=month&group=8'
+	#monthly_chat_engagement = parseChatReport(requestAPI(url))
+
+	#greeting prompt data
+	#enc_param = urllib.urlencode({'state':'invited', 'group[]':'8'})
+	#url='https://api.livechatinc.com/visitors?{}'.format(enc_param)
+
+#https://github.com/burnash/gspread
+#https://developers.google.com/apps-script/reference/spreadsheet/#classes
+#https://developers.google.com/drive/v3/web/manage-downloads#downloading_a_file
+def connectGoogleSheets():
+	print "test"
+
+# parse number of chat prompts
+def parseChatGreetings(resp):
+	res = json.loads(resp)
+
+	for k,v in res.items():
+		return v['displayed']
+
+
+#parse the number of chats per specified format(day/hour) per client(group)
+def parseChatReport(resp):
+	chat_dict = {}
+	res = json.loads(resp)
+
+	for k,v in res.items():
+		for k1, v1 in v.items():
+			if k1 == 'chats':
+				chat_dict[k] = v1
+	return chat_dict
+
+# parse number of chats per specified date per tag per client(group)
+def parseTags(resp):
+	global tags
+	global chatPerTag
+	res = json.loads(resp)
+
+	for tag in res:
+		for k1, v1 in tag.items():
+			if k1 == 'name':
+				if '-' in v1:
+					tags.append(v1)
+	for t in tags:
+		params = {'date_from':'2016-02-01', 'date_to':'2016-02-29', 'group_by':'month', 'group':'8', 'tag[]':t}
+		enc_param = urllib.urlencode(params)
+		url='https://api.livechatinc.com/reports/chats/total_chats?{}'.format(enc_param)
+		chat_tags = requestAPI(url)
+		res = json.loads(chat_tags)
+
+		for i in res: #i = 'yyyy-mm'
+			chatPerTag[t] = res[i]['chats']
+
+	sortedChatPerTag = sorted(chatPerTag.iteritems(), key=operator.itemgetter(1), reverse=True)
+	print sortedChatPerTag
+
+# simple wrapper function to encode the username & pass
+def encodeUserData(user, password):
+    return "Basic " + (user + ":" + password).encode("base64").rstrip()
+
+def requestAPI(url):
+	# create the request object and set some headers
+	request = urllib2.Request(url)
+	request.add_header('Accept', 'application/json')
+	#request.add_header('User-Agent', 'Mozilla/5.0')
+	request.add_header('Content-type', 'application/x-www-form-urlencoded')
+	request.add_header('Authorization', encodeUserData(u, p))
+	request.add_header('X-API-Version', '2')
+	# make the request and print the results
+	try:
+		response = urllib2.urlopen(request)
+		return response.read()
+
+	except urllib2.HTTPError, e:
+		print e.code
+		print e.msg
+		print e.headers
+		print e.fp.read()
+		print e.reason
+
+
+if __name__ == '__main__':
+	main()
